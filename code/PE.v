@@ -1,8 +1,7 @@
 /*
  * This module is used to calculate the following equation:
  *      out = (b + (in_1 + in_2) - 6 * (in_3 + in_4) + 13 * (in_5 + in_6)) / 20
- * The total delay is 2 + divider_stage
- * In current implementation, it will be 5 cycles
+ * The total delay is 3
  */
 module PE (input clk, 
            input reset,
@@ -59,7 +58,7 @@ end
 assign out = div_out;
 
 
-Divider #(38, 3) div (
+Divider #(38) div (
     .clk(clk),
     .reset(reset),
     .in(s2_reg0_r),
@@ -68,38 +67,21 @@ Divider #(38, 3) div (
 endmodule
 
 /* 
- * This module is used to divide the input by 20, the number of pipeline stages 
- * is configurable via the parameter STAGE
+ * This module is used to divide the input by 20
  * The number of stages affect the accuracy of the division
  */
-module Divider #(parameter WIDTH = 38,
-                 parameter STAGE = 3)(
+module Divider #(parameter WIDTH = 38)(
                  input clk, 
                  input reset,
                  input signed [WIDTH-1:0] in,
                  output signed [WIDTH-4:0] out);
 
-integer i;
-reg signed [WIDTH-1+3:0] x_r [0:STAGE-1], x_w [0:STAGE-1];
-assign out = x_r[STAGE-1];
+wire signed [WIDTH-1+2:0] add_s0;
+wire signed [WIDTH-1+3:0] add_s1;
+wire signed [WIDTH-1+4:0] add_s2;
 
-always @(*) begin
-    /* First, calculate 3/2^6 * input */
-    x_w[0] = (in + (in << 1)) >>> 6;
-    for (i = 1; i < STAGE; i = i + 1) begin
-        x_w[i] = x_r[i-1] + (x_r[i-1] >>> (4*i));
-    end
-end
-
-always @(posedge clk or posedge reset) begin
-    if (reset) begin
-        for (i = 0; i < STAGE; i = i + 1) begin
-            x_r[i] <= 0;
-        end
-    end else begin
-        for (i = 0; i < STAGE; i = i + 1) begin
-            x_r[i] <= x_w[i];
-        end
-    end
-end
+assign add_s0 = (in + (in << 1)) >>> 6;
+assign add_s1 = add_s0 + (add_s0 >>> 4);
+assign add_s2 = add_s1 + (add_s1 >>> 8);
+assign out = add_s2;
 endmodule

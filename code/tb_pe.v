@@ -29,8 +29,15 @@ PE DUT(.clk(clk),
 
 initial begin
     clk = 0;
-    @(negedge clk) reset = 1;
-    @(negedge clk) reset = 0;
+    reset = 1;
+    in_1 = 0;
+    in_2 = 0;
+    in_3 = 0;
+    in_4 = 0;
+    in_5 = 0;
+    in_6 = 0;
+    #(`CYCLE*1.2) reset = 0;
+    @(posedge clk);
     in_1 = pat_mem[3]/32'sd20 ; // x4
     in_2 = 0;
     in_3 = pat_mem[2]/32'sd20; // x3
@@ -39,15 +46,15 @@ initial begin
     in_6 = 0;
     b = pat_mem[0]; // x1
 
-    //FIXME Clarify the dependency, since the current input seems incorrect
-    @(negedge clk);
-    in_1 = pat_mem[4]/32'sd20;
-    in_2 = 0;
-    in_3 = pat_mem[3]/32'sd20;
-    in_4 = 0;
-    in_5 = pat_mem[2]/32'sd20;
-    in_6 = pat_mem[0]/32'sd20;
-    b = pat_mem[1]; // x2
+    // //FIXME Clarify the dependency, since the current input seems incorrect
+    // @(negedge clk);
+    // in_1 = pat_mem[4]/32'sd20;
+    // in_2 = 0;
+    // in_3 = pat_mem[3]/32'sd20;
+    // in_4 = 0;
+    // in_5 = pat_mem[2]/32'sd20;
+    // in_6 = pat_mem[0]/32'sd20;
+    // b = pat_mem[1]; // x2
 
     repeat(11) @(posedge clk);
     $finish;
