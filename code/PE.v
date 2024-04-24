@@ -75,12 +75,14 @@ module Divider #(parameter WIDTH = 38)(
                  input reset,
                  input signed [WIDTH-1:0] in,
                  output signed [WIDTH-4:0] out);
-
+           
+wire signed [WIDTH-1+1:0] tmp_in;
 wire signed [WIDTH-1+2:0] add_s0;
 wire signed [WIDTH-1+3:0] add_s1;
 wire signed [WIDTH-1+4:0] add_s2;
 
-assign add_s0 = (in + (in << 1)) >>> 6;
+assign tmp_in = {in[WIDTH-1:0],0}
+assign add_s0 = (in + tmp_in) >>> 6;
 assign add_s1 = add_s0 + (add_s0 >>> 4);
 assign add_s2 = add_s1 + (add_s1 >>> 8);
 assign out = add_s2;
