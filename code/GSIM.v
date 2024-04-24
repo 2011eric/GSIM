@@ -51,20 +51,26 @@ end
 
 
 
-always @(*) begin:state_logic
+always @(*) begin:state_logic_and_counter_logic
     state_w = state_r;
-    case (state_r)
-        S_IDLE: if (in_en) state_w = S_IN;
-        S_IN: if (row_cnt_r == N-1) state_w = S_IDLE;
-    endcase
-end
-
-always @(*) begin:counter_logic
     row_cnt_w = row_cnt_r;
     col_cnt_w = col_cnt_r;
-    if (state_r == S_IN) begin
-        row_cnt_w = row_cnt_r == N - 1 ? 0 : row_cnt_r + 1;
-    end
+    case (state_r)
+        S_IDLE: begin
+            if (in_en) state_w = S_IN;
+            else state_w = S_IDLE;
+        end
+        S_IN: begin
+            if (row_cnt_r == N-1) begin
+                state_w = S_IDLE;
+                row_cnt_w = 0;
+            end
+            else begin
+                state_w = S_IN;
+                row_cnt_w = row_cnt_r + 1;
+            end
+        end
+    endcase
 end
 
 always @(*) begin: fifo_b
