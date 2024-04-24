@@ -32,6 +32,7 @@ reg shift_four, shift_one;
 reg [31:0] pe_in1, pe_in2, pe_in3, pe_in4, pe_in5, pe_in6 [0:N-1];
 reg [31:0] pe_out;
 reg [15:0] pe_b_in;
+
 //----------------- calling submodule -----------------//
 PE pe (.clk(clk), 
        .reset(reset), 
@@ -55,14 +56,14 @@ always @(*) begin:
         S_IDLE: begin
             if (in_en) begin
                 state_w = S_IN;
-                b_w[0] = b_in; // reading the first b_in, next cycle should start the computation
+                b_w[0] = b_in;
                 pe_b_in = b_r[0];
             end
             else begin
                 state_w = S_IDLE;
             end
         end
-        S_IN: begin // upon reading the first b_in, start the computation until recieving total 16 b_in
+        S_IN: begin
             if (row_cnt_r == N-1) begin
                 state_w = S_IDLE;
                 row_cnt_w = 0;
