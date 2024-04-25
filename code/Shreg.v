@@ -32,32 +32,65 @@ module shreg #(
         end
         case(ctrl) 
         SH1: begin
-            MEM_w[15] = MEM_r[0];
-            for (i = 0; i < 15; i = i+1) begin
-                MEM_w[i] = MEM_r[i+1];
+            if(i_en) begin
+                MEM_w[15] = MEM_r[0];
+                MEM_W[14] = IN;
+                for (i = 0; i < 14; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+1];
+                end
+            end
+            else begin
+                MEM_w[15] = MEM_r[0];
+                for (i = 0; i < 15; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+1];
+                end
             end
         end
         SH4: begin
-            MEM_w[12] = MEM_r[0];
-            MEM_w[13] = MEM_r[1];
-            MEM_w[14] = MEM_r[2];
-            MEM_w[15] = MEM_r[3];
-            for (i = 0; i < 12; i = i+1) begin
-                MEM_w[i] = MEM_r[i+4];
+            if(i_en) begin
+                MEM_w[12] = MEM_r[0];
+                MEM_w[13] = MEM_r[1];
+                MEM_w[14] = MEM_r[2];
+                MEM_w[15] = MEM_r[3];
+                MEM_w[11] = IN;
+                for (i = 0; i < 11; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+4];
+                end
+            end
+            else begin
+                MEM_w[12] = MEM_r[0];
+                MEM_w[13] = MEM_r[1];
+                MEM_w[14] = MEM_r[2];
+                MEM_w[15] = MEM_r[3];
+                for (i = 0; i < 12; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+4];
+                end
             end
         end
         SH5: begin
-            MEM_w[11] = MEM_r[0];
-            MEM_w[12] = MEM_r[1];
-            MEM_w[13] = MEM_r[2];
-            MEM_w[14] = MEM_r[3];
-            MEM_w[15] = MEM_r[4];
-            for (i = 0; i < 11; i = i+1) begin
-                MEM_w[i] = MEM_r[i+5];
+            if(i_en) begin
+                MEM_w[11] = MEM_r[0];
+                MEM_w[12] = MEM_r[1];
+                MEM_w[13] = MEM_r[2];
+                MEM_w[14] = MEM_r[3];
+                MEM_w[15] = MEM_r[4];
+                MEM_w[10] = IN;
+                for (i = 0; i < 10; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+5];
+                end
+            end
+            else begin
+                MEM_w[11] = MEM_r[0];
+                MEM_w[12] = MEM_r[1];
+                MEM_w[13] = MEM_r[2];
+                MEM_w[14] = MEM_r[3];
+                MEM_w[15] = MEM_r[4];
+                for (i = 0; i < 11; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+5];
+                end
             end
         end
         endcase
-        if (i_en) MEM_w[15] = IN;
     end
 
     always@ (posedge clk or negedge rst_n) begin
