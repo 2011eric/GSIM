@@ -3,7 +3,7 @@ module shreg #(
 )(
     input clk,
     input rst_n,
-    input ctrl,
+    input [1:0] ctrl,
     input i_en, //assert when x15 is taking input (this may be redundant if we take input every cycle)
     input [BIT_WIDTH-1: 0] IN,
     output [BIT_WIDTH-1: 0] OUT1, OUT2, OUT3, OUT4, OUT5, OUT6
