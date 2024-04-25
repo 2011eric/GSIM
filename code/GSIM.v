@@ -24,13 +24,13 @@ reg [3:0] row_cnt_r, row_cnt_w;
 reg [3:0] col_cnt_r, col_cnt_w;
 
 //----------------- defining b_shreg's wire -----------------//
-wire [15:0] b_shreg_out_1, b_shreg_out_2, b_shreg_out_3, b_shreg_out_4, b_shreg_out_5, b_shreg_out_6;
+wire [15:0] b_shreg_out_0, b_shreg_out_1, b_shreg_out_2, b_shreg_out_3, b_shreg_out_4, b_shreg_out_5, b_shreg_out_6;
 reg  [15:0] b_shreg_in_w, b_shreg_in_r;
 reg  [1:0]  b_shreg_ctrl_w, b_shreg_ctrl_r;
 reg         b_shreg_i_en_w, b_shreg_i_en_r;
 
 //----------------- defining x_shreg's wire -----------------//
-wire [31:0] x_shreg_out_1, x_shreg_out_2, x_shreg_out_3, x_shreg_out_4, x_shreg_out_5, x_shreg_out_6;
+wire [31:0] x_shreg_out_0, x_shreg_out_1, x_shreg_out_2, x_shreg_out_3, x_shreg_out_4, x_shreg_out_5, x_shreg_out_6;
 reg  [31:0] x_shreg_in_w, x_shreg_in_r;
 reg  [1:0]  x_shreg_ctrl_w, x_shreg_ctrl_r;
 reg         x_shreg_i_en_w, x_shreg_i_en_r;
@@ -42,7 +42,7 @@ reg         x_shreg_i_en_w, x_shreg_i_en_r;
  *     2. For each iteration, shift by 4
  *     3. After 4 iterations, shift the FIFO by 1
  */
-reg [31:0] pe_in1, pe_in2, pe_in3, pe_in4, pe_in5, pe_in6 [0:N-1];
+wire [31:0] pe_in1, pe_in2, pe_in3, pe_in4, pe_in5, pe_in6 [0:N-1];
 wire [31:0] pe_out;
 reg [15:0] pe_b_in;
 
@@ -64,13 +64,14 @@ PE pe (
 Shreg b_shreg ( // TODO: connecting the wires
     .clk(clk), 
     .rst_n(reset), 
+    .OUT0(b_shreg_out_0),
     .OUT1(b_shreg_out_1),
     .OUT2(b_shreg_out_2),
     .OUT3(b_shreg_out_3), 
-    .OUT4(shreg_out_4), 
+    .OUT4(b_shreg_out_4), 
     .OUT5(b_shreg_out_5), 
     .OUT6(b_shreg_out_6), 
-    .IN(b_shreg_in), 
+    .IN(b_shreg_in),
     .ctrl(b_shreg_ctrl), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5
     .i_en(b_shreg_i_en)
 );
@@ -78,6 +79,7 @@ Shreg b_shreg ( // TODO: connecting the wires
 Shreg x_shreg ( // TODO: connecting the wires
     .clk(clk), 
     .rst_n(reset), 
+    .OUT0(x_shreg_out_0),
     .OUT1(x_shreg_out_1),
     .OUT2(x_shreg_out_2),
     .OUT3(x_shreg_out_3), 
@@ -88,6 +90,16 @@ Shreg x_shreg ( // TODO: connecting the wires
     .ctrl(x_shreg_ctrl), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5
     .i_en(x_shreg_i_en)
 );
+
+//----------------- connecting the wires -----------------//
+assign pe_in1 = ((state_r == S_CALC) && row_cnt_r != 7) ? x_shreg_out_1 : 0; // 13
+assign pe_in2 = ((state_r == S_CALC) && row_cnt_r != 0) ? x_shreg_out_2 : 0; // 3
+assign pe_in3 = ((state_r == S_CALC) && row_cnt_r != 7 && row_cnt_r != 11) ? x_shreg_out_3 : 0; // 14
+assign pe_in4 = ((state_r == S_CALC) && row_cnt_r != 0 && row_cnt_r != 4) ? x_shreg_out_4 : 0; // 2
+assign pe_in5 = ((state_r == S_CALC) && row_cnt_r != 7 && row_cnt_r != 11 && row_cnt_r != 15) ? x_shreg_out_5 : 0; // 15
+assign pe_in6 = ((state_r == S_CALC) && row_cnt_r != 0 && row_cnt_r != 4 && row_cnt_r != 8) ? x_shreg_out_6 : 0; // 1
+assign pe_b_in = (state_r == S_CALC) ? x_shreg_out_0 : 0;
+assign x_out = x_shreg_out_0;
 //----------------- combinational part -----------------//
 integer i;
 always @(*) begin:
@@ -96,57 +108,75 @@ always @(*) begin:
     col_cnt_w = col_cnt_r;
     b_shreg_i_en_w = 1'b0;
     x_shreg_i_en_w = 1'b0;
+    out_valid = 1'b0;
     case (state_r)
         S_IDLE: begin
             if (in_en) begin
                 state_w = S_IN;
                 b_shreg_in_w = b_in; // the b_shreg_in is the b[15]
                 b_shreg_ctrl_w = 2'b01; // shift by 1
+                b_shreg_i_en_w = 1'b1;
                 row_cnt_w = 1;
             end
             else begin
+                state_w = S_IDLE;
                 b_shreg_in = 0;
                 b_shreg_ctrl = 2'b00;
-                state_w = S_IDLE;
+                b_shreg_i_en = 1'b0;
             end
         end
         S_IN: begin
-            if(row_cnt_r == N-1) begin // if we have read all the b values
+            if(i_en && row_cnt_r == N-1) begin // if we have read all the b values
                 state_w = S_CALC;
+                b_shreg_in_w = b_in;
+                b_shreg_ctrl_w = 2'b00;
+                b_shreg_i_en_w = 1'b1; // reading the last b value
                 row_cnt_w = 0;
                 col_cnt_w = 0;
             end
             else begin
                 state_w = S_IN;
+                b_shreg_in_w = b_in;
+                b_shreg_ctrl_w = 2'b01;
+                b_shreg_i_en_w = 1'b1;
                 row_cnt_w = row_cnt_r + 1;
             end
         end
         S_CALC: begin
-            if (row_cnt_r == N-1) begin
+            if(col_cnt_r == NR_ITERATION-1) begin
+                state_w = S_OUT;
+                row_cnt_w = 0;
+                col_cnt_w = 0;
+                out_valid = 1'b1;
+            end
+            else begin
+                if (row_cnt_r == N-1) begin
+                    state_w = S_CALC;
+                    row_cnt_w = 0;
+                    col_cnt_w = col_cnt_r + 1;
+                end
+                else begin
+                    state_w = S_CALC;
+                    row_cnt_w = row_cnt_r + 1;
+                    col_cnt_w = col_cnt_r;
+                end
+            end
+            
+        end
+        S_OUT: begin
+            if (col_cnt_r == N-1) begin
                 state_w = S_IDLE;
                 row_cnt_w = 0;
-                col_cnt_w = col_cnt_r + 1;
+                col_cnt_w = 0;
             end
             else begin
                 state_w = S_IN;
-                row_cnt_w = row_cnt_r + 1;
-                col_cnt_w = col_cnt_r;
+                row_cnt_w = row_cnt_r;
+                col_cnt_w = col_cnt_r + 1;
             end
         end
     endcase
 end
-
-// always @(*) begin: fifo_b
-//     for (i = 0; i < N; i = i + 1) b_w[i] = b_r[i]; // hold the input value
-//     if (shift_one) begin
-//         for (i = 0; i < N - 1; i = i + 1) begin
-//             b_w[i] = b_r[i+1];
-//         end
-//         b_w[N-1] = (state_r == S_IN) ? b_in : b_r[0];
-//     end 
-// end
-
-//TODO: implement fifo for xn
 
 
 //----------------- sequential part -----------------//
