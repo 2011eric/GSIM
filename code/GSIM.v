@@ -71,9 +71,9 @@ Shreg b_shreg ( // TODO: connecting the wires
     .OUT4(b_shreg_out_4), 
     .OUT5(b_shreg_out_5), 
     .OUT6(b_shreg_out_6), 
-    .IN(b_shreg_in),
-    .ctrl(b_shreg_ctrl), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5
-    .i_en(b_shreg_i_en)
+    .IN(b_shreg_in_r),
+    .ctrl(b_shreg_ctrl_r), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5
+    .i_en(b_shreg_i_en_r)
 );
 
 Shreg x_shreg ( // TODO: connecting the wires
@@ -86,9 +86,9 @@ Shreg x_shreg ( // TODO: connecting the wires
     .OUT4(x_shreg_out_4), 
     .OUT5(x_shreg_out_5), 
     .OUT6(x_shreg_out_6), 
-    .IN(x_shreg_in), 
-    .ctrl(x_shreg_ctrl), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5
-    .i_en(x_shreg_i_en)
+    .IN(x_shreg_in_r), 
+    .ctrl(x_shreg_ctrl_r), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5
+    .i_en(x_shreg_i_en_r)
 );
 
 //----------------- connecting the wires -----------------//
@@ -157,6 +157,8 @@ always @(*) begin:
                 end
                 else begin
                     state_w = S_CALC;
+                    b_shreg_ctrl_w = (row_cnt_r[1:0] == 2'b11)? 2'b10 : 1'b11;
+                    b_shreg_i_en_w = (row_cnt_r[1:0] == 2'b11)? 1'b1 : 1'b0;
                     row_cnt_w = row_cnt_r + 1;
                     col_cnt_w = col_cnt_r;
                 end
@@ -168,11 +170,13 @@ always @(*) begin:
                 state_w = S_IDLE;
                 row_cnt_w = 0;
                 col_cnt_w = 0;
+                out_valid = 1'b1;
             end
             else begin
                 state_w = S_IN;
                 row_cnt_w = row_cnt_r;
                 col_cnt_w = col_cnt_r + 1;
+                out_valid = 1'b1;
             end
         end
     endcase
