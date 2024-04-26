@@ -4,12 +4,13 @@ module shreg #(
     input clk,
     input rst_n,
     input [1:0] ctrl,
-    input i_en //assert when x15 is taking input (this may be redundant if we take input every cycle)
+    input i_en, //assert when x15 is taking input (this may be redundant if we take input every cycle)
     input [BIT_WIDTH-1: 0] IN,
     output [BIT_WIDTH-1: 0] OUT0, OUT1, OUT2, OUT3, OUT4, OUT5, OUT6
 );
     integer i;
-    reg [BIT_WIDTH-1: 0] MEM_r [0: 15], MEM_w [0:15];
+    reg [BIT_WIDTH-1: 0] MEM_r [0: 15];
+    reg [BIT_WIDTH-1: 0] MEM_w [0: 15];
     
     //parameter
     localparam SH0 = 2'b00;
@@ -37,7 +38,7 @@ module shreg #(
             if(i_en) begin
                 MEM_w[15] = IN;
                 for (i = 0; i < 15; i = i+1) begin
-                    MEM_w[i] = MEM_r[i+1];
+                    MEM_w[i] = MEM_r[i];
                 end
             end
             else begin
@@ -48,9 +49,9 @@ module shreg #(
         end
         SH1: begin
             if(i_en) begin
-                MEM_w[15] = MEM_r[0];
-                MEM_W[14] = IN;
-                for (i = 0; i < 14; i = i+1) begin
+                MEM_w[15] = IN;
+                MEM_w[14] = MEM_r[15];
+                for (i = 0; i < 15; i = i+1) begin
                     MEM_w[i] = MEM_r[i+1];
                 end
             end
@@ -62,12 +63,23 @@ module shreg #(
             end
         end
         SH4: begin
-            MEM_w[12] = MEM_r[0];
-            MEM_w[13] = MEM_r[1];
-            MEM_w[14] = MEM_r[2];
-            MEM_w[15] = MEM_r[3];
-            for (i = 0; i < 12; i = i+1) begin
-                MEM_w[i] = MEM_r[i+4];
+            if(i_en) begin
+                MEM_w[12] = MEM_r[0];
+                MEM_w[13] = MEM_r[1];
+                MEM_w[14] = MEM_r[2];
+                MEM_w[15] = IN;
+                for (i = 0; i < 12; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+4];
+                end
+            end
+            else begin
+                MEM_w[12] = MEM_r[0];
+                MEM_w[13] = MEM_r[1];
+                MEM_w[14] = MEM_r[2];
+                MEM_w[15] = MEM_r[3];
+                for (i = 0; i < 12; i = i+1) begin
+                    MEM_w[i] = MEM_r[i+4];
+                end
             end
         end
         SH5: begin
@@ -77,7 +89,7 @@ module shreg #(
                 MEM_w[13] = MEM_r[2];
                 MEM_w[14] = MEM_r[3];
                 MEM_w[15] = IN;
-                for (i = 0; i < 11 i = i+1) begin
+                for (i = 0; i < 11; i = i+1) begin
                     MEM_w[i] = MEM_r[i+5];
                 end
             end
@@ -95,8 +107,8 @@ module shreg #(
         endcase
     end
 
-    always@ (posedge clk or negedge rst_n) begin
-        if(!rst_n) begin
+    always@ (posedge clk or posedge rst_n) begin
+        if(rst_n) begin
             for (i=0; i < 16; i = i+1) begin
                 MEM_r[i] <= 0;
             end
