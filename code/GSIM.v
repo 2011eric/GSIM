@@ -33,10 +33,7 @@ reg         b_shreg_i_en_w, b_shreg_i_en_r;
 
 //----------------- defining x_shreg's wire -----------------//
 wire [31:0] x_shreg_out_0, x_shreg_out_1, x_shreg_out_2, x_shreg_out_3, x_shreg_out_4, x_shreg_out_5, x_shreg_out_6;
-reg [31:0] x_shreg_out_0_w, x_shreg_out_0_r, x_shreg_out_1_w, x_shreg_out_1_r, x_shreg_out_2_w, x_shreg_out_2_r, x_shreg_out_3_w, x_shreg_out_3_r;
-reg [31:0] x_shreg_out_4_w, x_shreg_out_4_r, x_shreg_out_5_w, x_shreg_out_5_r, x_shreg_out_6_w, x_shreg_out_6_r;
 reg  [31:0] x_shreg_in_w, x_shreg_in_r;
-// reg  [1:0]  x_shreg_ctrl_w, x_shreg_ctrl_r;
 reg         x_shreg_i_en_w, x_shreg_i_en_r;
 
 
@@ -106,7 +103,7 @@ assign pe_in4 = ((state_r == S_CALC) && row_cnt_r != 16 && row_cnt_r != 12 && pe
 assign pe_in5 = ((state_r == S_CALC) && row_cnt_r != 1 && pe_i_en_r) ? x_shreg_out_5 : 0; // 15
 assign pe_in6 = ((state_r == S_CALC) && row_cnt_r != 16 && pe_i_en_r) ? x_shreg_out_6 : 0; // 1
 assign pe_b_in = (state_r == S_CALC && pe_i_en_r) ? b_shreg_out_0 : 0;
-assign x_out = x_shreg_out_0_w;
+assign x_out = x_shreg_out_0;
 assign out_valid = out_valid_r;
 //----------------- combinational part -----------------//
 integer i;
@@ -117,16 +114,9 @@ always @(*) begin
     b_shreg_i_en_w = 1'b0;
     x_shreg_i_en_w = 1'b0;
     b_shreg_ctrl_w = 2'b00;
+    b_shreg_in_w = 0;
     x_shreg_in_w = 0;
-    x_shreg_out_0_w = x_shreg_out_0;
-    x_shreg_out_1_w = x_shreg_out_1;
-    x_shreg_out_2_w = x_shreg_out_2;
-    x_shreg_out_3_w = x_shreg_out_3;
-    x_shreg_out_4_w = x_shreg_out_4;
-    x_shreg_out_5_w = x_shreg_out_5;
-    x_shreg_out_6_w = x_shreg_out_6;
     pe_i_en_w = 1'b0;
-    // x_shreg_ctrl_w = 2'b00;
     out_valid_w = 1'b0;
     case (state_r)
         S_IDLE: begin
@@ -142,6 +132,7 @@ always @(*) begin
                 b_shreg_in_w = 0;
                 b_shreg_ctrl_w = 2'b00;
                 b_shreg_i_en_w = 1'b0;
+                row_cnt_w = row_cnt_r;
             end
         end
         S_IN: begin
@@ -159,22 +150,22 @@ always @(*) begin
                 b_shreg_ctrl_w = 2'b01;
                 b_shreg_i_en_w = 1'b1;
                 row_cnt_w = row_cnt_r + 1;
+                col_cnt_w = col_cnt_r;
             end
         end
         S_CALC: begin
             pe_i_en_w = 1'b1;
-            b_shreg_ctrl_w = (row_cnt_r[1:0] == 2'b11)? 2'b11 : 2'b10;
+            b_shreg_ctrl_w = (row_cnt_r[1:0] == 2'b11) ? 2'b11 : 2'b10;
+            x_shreg_in_w = pe_out;
             if (row_cnt_r == N) begin
                 state_w = S_WAIT;
                 x_shreg_i_en_w = 1'b1;
-                x_shreg_in_w = pe_out;
                 row_cnt_w = 1;
                 col_cnt_w = col_cnt_r;
             end
             else begin
                 state_w = S_CALC;
-                x_shreg_i_en_w = (row_cnt_r >= 4'd3)? 1'b1 : 1'b0 | x_shreg_i_en_r;
-                x_shreg_in_w = (row_cnt_r >= 4'd3)? pe_out : 32'b0;
+                x_shreg_i_en_w = (row_cnt_r >= 4'd3)? 1'b1 : 1'b0 ;
                 row_cnt_w = row_cnt_r + 1;
                 col_cnt_w = col_cnt_r;
             end
@@ -190,6 +181,7 @@ always @(*) begin
             else begin
                 b_shreg_ctrl_w = 2'b10;
                 x_shreg_in_w = pe_out;
+                out_valid_w = 1'b0;
                 if (row_cnt_r == 3) begin
                     state_w = S_CALC;
                     row_cnt_w = 1;
@@ -235,17 +227,9 @@ always @(posedge clk or posedge reset) begin
         b_shreg_i_en_r <= 1'b0;
         x_shreg_i_en_r <= 1'b0;
         b_shreg_ctrl_r <= 2'b00;
-        // x_shreg_ctrl_r <= 2'b00;
         b_shreg_in_r <= 0; 
         x_shreg_in_r <= 0;
         out_valid_r <= 0;
-        x_shreg_out_0_r <= 0;
-        x_shreg_out_1_r <= 0;
-        x_shreg_out_2_r <= 0;
-        x_shreg_out_3_r <= 0;
-        x_shreg_out_4_r <= 0;
-        x_shreg_out_5_r <= 0;
-        x_shreg_out_6_r <= 0;
         pe_i_en_r <= 0;
     end else begin
         state_r <= state_w;
@@ -254,17 +238,9 @@ always @(posedge clk or posedge reset) begin
         b_shreg_i_en_r <= b_shreg_i_en_w;
         x_shreg_i_en_r <= x_shreg_i_en_w;
         b_shreg_ctrl_r <= b_shreg_ctrl_w;
-        // x_shreg_ctrl_r <= x_shreg_ctrl_w;
         b_shreg_in_r <= b_shreg_in_w;
         x_shreg_in_r <= x_shreg_in_w;
         out_valid_r <= out_valid_w;
-        x_shreg_out_0_r <= x_shreg_out_0_w;
-        x_shreg_out_1_r <= x_shreg_out_1_w;
-        x_shreg_out_2_r <= x_shreg_out_2_w;
-        x_shreg_out_3_r <= x_shreg_out_3_w;
-        x_shreg_out_4_r <= x_shreg_out_4_w;
-        x_shreg_out_5_r <= x_shreg_out_5_w;
-        x_shreg_out_6_r <= x_shreg_out_6_w;
         pe_i_en_r <= pe_i_en_w;
     end
 end
