@@ -9,7 +9,7 @@ module PE (input clk,
            input signed [15:0] b,
            output [31:0] out);
 
-reg signed [15:0] b_r, b_w;
+reg signed [31:0] b_r, b_w;
 reg signed [32:0] s1_adder [0:2];
 reg signed [35:0] s1_mul6;
 reg signed [36:0] s1_mul13;
@@ -39,7 +39,7 @@ always @(posedge clk or posedge reset) begin
 end
 
 always @(*) begin:stage1
-    b_w = b;
+    b_w = {b, 16'b0};
     s1_adder[0] = in_1 + in_2;
     s1_adder[1] = in_3 + in_4;
     s1_adder[2] = in_5 + in_6;
