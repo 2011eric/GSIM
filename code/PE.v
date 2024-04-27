@@ -43,9 +43,7 @@ always @(*) begin:stage1
     s1_adder[0] = in_1 + in_2;
     s1_adder[1] = in_3 + in_4;
     s1_adder[2] = in_5 + in_6;
-    // s1_mul6 = $signed(s1_adder[1] << 1) + $signed(s1_adder[1] << 2);
     s1_mul6 = $signed({s1_adder[1][32:0], 1'b0}) + $signed({s1_adder[1][32:0], 2'b00});
-    // s1_mul13 = $signed(s1_adder[2] << 3) + $signed(s1_adder[2] << 2) + $signed(s1_adder[2]);
     s1_mul13 = $signed({s1_adder[2][32:0], 3'b000}) + $signed({s1_adder[2][32:0], 2'b00}) + $signed(s1_adder[2]);
     s1_reg0_w = s1_adder[0];
     s1_reg1_w = s1_mul6;
