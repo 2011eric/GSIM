@@ -42,6 +42,7 @@ wire [31:0] pe_out;
 wire [15:0] pe_b_in;
 reg         pe_i_en_w, pe_i_en_r;
 
+`ifdef DEBUG
 wire [15:0] out_tmp, pe_in1_tmp, pe_in2_tmp, pe_in3_tmp, pe_in4_tmp, pe_in5_tmp, pe_in6_tmp;
 assign out_tmp = pe_out[31:16];
 assign pe_in1_tmp = pe_in1[31:16];
@@ -50,6 +51,7 @@ assign pe_in3_tmp = pe_in3[31:16];
 assign pe_in4_tmp = pe_in4[31:16];
 assign pe_in5_tmp = pe_in5[31:16];
 assign pe_in6_tmp = pe_in6[31:16];
+`endif
 //----------------- calling submodule -----------------//
 PE pe (
     .clk(clk), 
