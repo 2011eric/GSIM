@@ -138,7 +138,6 @@ always @(*) begin
             end
         end
         S_IN: begin
-            // if(row_cnt_r == N) begin // if we have read all the b values
             if(row_cnt_r[4]) begin // if we have read all the b values
                 state_w = S_CALC;
                 b_shreg_in_w = b_in;
@@ -185,7 +184,6 @@ always @(*) begin
                 b_shreg_ctrl_w = 2'b10;
                 x_shreg_in_w = pe_out;
                 out_valid_w = 1'b0;
-                // if (row_cnt_r == 3) begin
                 if (row_cnt_r[0] && row_cnt_r[1]) begin
                     state_w = S_CALC;
                     row_cnt_w = 1;
@@ -203,7 +201,6 @@ always @(*) begin
             end
         end
         S_OUT: begin
-            // if (row_cnt_w == N-1) begin
             if(row_cnt_r[4]) begin 
                 state_w = S_IDLE;
                 row_cnt_w = 0;
