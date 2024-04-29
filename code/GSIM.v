@@ -22,7 +22,7 @@ localparam S_IDLE = 3'd0, S_IN = 3'd1, S_CALC = 3'd2, S_WAIT = 3'd3, S_OUT = 3'd
 // reg [15:0] b_r, b_w [0:N-1];    /* FIFO for b */
 reg [2:0] state_r, state_w;
 reg [4:0] row_cnt_r, row_cnt_w;
-reg [19:0] col_cnt_r, col_cnt_w;
+reg [6:0] iter_cnt_w, iter_cnt_r;
 reg out_valid_w, out_valid_r;
 
 //----------------- defining b_shreg's wire -----------------//
@@ -112,7 +112,7 @@ integer i;
 always @(*) begin
     state_w = state_r;
     row_cnt_w = row_cnt_r;
-    col_cnt_w = col_cnt_r;
+    iter_cnt_w = iter_cnt_r;
     b_shreg_i_en_w = 1'b0;
     x_shreg_i_en_w = 1'b0;
     b_shreg_ctrl_w = 2'b00;
@@ -144,7 +144,7 @@ always @(*) begin
                 b_shreg_ctrl_w = 2'b00;
                 b_shreg_i_en_w = 1'b0; 
                 row_cnt_w = 0;
-                col_cnt_w = 0;
+                iter_cnt_w = 0;
             end
             else begin
                 state_w = S_IN;
@@ -152,7 +152,7 @@ always @(*) begin
                 b_shreg_ctrl_w = 2'b01;
                 b_shreg_i_en_w = 1'b1;
                 row_cnt_w = row_cnt_r + 1;
-                col_cnt_w = col_cnt_r;
+                iter_cnt_w = iter_cnt_r;
             end
         end
         S_CALC: begin
@@ -163,21 +163,21 @@ always @(*) begin
                 state_w = S_WAIT;
                 x_shreg_i_en_w = 1'b1;
                 row_cnt_w = 1;
-                col_cnt_w = col_cnt_r;
+                iter_cnt_w = iter_cnt_r;
             end
             else begin
                 state_w = S_CALC;
                 x_shreg_i_en_w = (row_cnt_r >= 4'd3)? 1'b1 : 1'b0 ;
                 row_cnt_w = row_cnt_r + 1;
-                col_cnt_w = col_cnt_r;
+                iter_cnt_w = iter_cnt_r;
             end
         end
         S_WAIT: begin
-            if(col_cnt_r == NR_ITERATION-1 && (row_cnt_r[0] && row_cnt_r[1])) begin
+            if(iter_cnt_r == NR_ITERATION-1 && (row_cnt_r[0] && row_cnt_r[1])) begin
                 b_shreg_ctrl_w = 2'b01;
                 state_w = S_OUT;
                 row_cnt_w = 1;
-                col_cnt_w = 0;
+                iter_cnt_w = 0;
                 out_valid_w = 1'b1;
             end
             else begin
@@ -187,14 +187,14 @@ always @(*) begin
                 if (row_cnt_r[0] && row_cnt_r[1]) begin
                     state_w = S_CALC;
                     row_cnt_w = 1;
-                    col_cnt_w = col_cnt_r + 1;
+                    iter_cnt_w = iter_cnt_r + 1;
                     pe_i_en_w = 1'b1;
                     x_shreg_i_en_w = 1'b0;
                 end
                 else begin
                     state_w = S_WAIT;
                     row_cnt_w = row_cnt_r + 1;
-                    col_cnt_w = col_cnt_r;
+                    iter_cnt_w = iter_cnt_r;
                     pe_i_en_w = 1'b0;
                     x_shreg_i_en_w = 1'b1;
                 end
@@ -204,14 +204,14 @@ always @(*) begin
             if(row_cnt_r[4]) begin 
                 state_w = S_IDLE;
                 row_cnt_w = 0;
-                col_cnt_w = 0;
+                iter_cnt_w = 0;
                 out_valid_w = 1'b1;
                 b_shreg_ctrl_w = 2'b00;
             end
             else begin
                 state_w = S_OUT;
                 row_cnt_w = row_cnt_r + 1;
-                col_cnt_w = col_cnt_r;
+                iter_cnt_w = iter_cnt_r;
                 out_valid_w = 1'b1;
                 b_shreg_ctrl_w = 2'b01;
             end
@@ -225,7 +225,7 @@ always @(posedge clk or posedge reset) begin
     if (reset) begin
         state_r <= S_IDLE;
         row_cnt_r <= 0;
-        col_cnt_r <= 0;
+        iter_cnt_r <= 0;
         b_shreg_i_en_r <= 1'b0;
         x_shreg_i_en_r <= 1'b0;
         b_shreg_ctrl_r <= 2'b00;
@@ -236,7 +236,7 @@ always @(posedge clk or posedge reset) begin
     end else begin
         state_r <= state_w;
         row_cnt_r <= row_cnt_w;
-        col_cnt_r <= col_cnt_w;
+        iter_cnt_r <= iter_cnt_w;
         b_shreg_i_en_r <= b_shreg_i_en_w;
         x_shreg_i_en_r <= x_shreg_i_en_w;
         b_shreg_ctrl_r <= b_shreg_ctrl_w;
