@@ -58,7 +58,7 @@ end
 assign out = div_out;
 
 
-Divider #(38) div (
+Divider #(38, 8) div (
     .clk(clk),
     .reset(reset),
     .in(s2_reg0_r),
@@ -70,23 +70,23 @@ endmodule
  * This module is used to divide the input by 20
  * The number of stages affect the accuracy of the division
  */
-module Divider #(parameter WIDTH = 38)(
+module Divider #(parameter WIDTH = 38, parameter FRAC = 16)(
                  input clk, 
                  input reset,
                  input signed [WIDTH-1:0] in,
                  output signed [WIDTH-4:0] out);
            
-wire signed [WIDTH-1+1+2*WIDTH:0] tmp_in;
-wire signed [WIDTH-1+2+2*WIDTH:0] add_s0;
-wire signed [WIDTH-1+3+2*WIDTH:0] add_s1;
-wire signed [WIDTH-1+4+2*WIDTH:0] add_s2;
-wire signed [WIDTH-1+5+2*WIDTH:0] add_s3;
+wire signed [WIDTH-1+1+FRAC:0] tmp_in;
+wire signed [WIDTH-1-4+FRAC:0] add_s0;
+wire signed [WIDTH-1-3+FRAC:0] add_s1;
+wire signed [WIDTH-1-2+FRAC:0] add_s2;
+wire signed [WIDTH-1-1+FRAC:0] add_s3;
 
 
-assign tmp_in = {in[WIDTH-1:0],1'b0, {2*WIDTH{1'b0}}}; // padding 0s
-assign add_s0 = ($signed({in[WIDTH-1:0],{2*WIDTH{1'b0}}}) + tmp_in) >>> 6;
+assign tmp_in = {in[WIDTH-1:0],1'b0, {(FRAC){1'b0}}}; // padding 0s
+assign add_s0 = ($signed({in[WIDTH-1:0],{(FRAC){1'b0}}}) + tmp_in) >>> 6;
 assign add_s1 = add_s0 + (add_s0 >>> 4);
 assign add_s2 = add_s1 + (add_s1 >>> 8);
 assign add_s3 = add_s2 + (add_s2 >>> 16);
-assign out = add_s3[WIDTH-1+5+2*WIDTH: 2*WIDTH];
+assign out = add_s3[WIDTH-1-1+FRAC: FRAC];
 endmodule
