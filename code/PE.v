@@ -43,8 +43,8 @@ always @(*) begin:stage1
     s1_adder[0] = in_1 + in_2;
     s1_adder[1] = in_3 + in_4;
     s1_adder[2] = in_5 + in_6;
-    s1_mul6 = $signed(s1_adder[1] << 1) + $signed(s1_adder[1] << 2);
-    s1_mul13 = $signed(s1_adder[2] << 3) + $signed(s1_adder[2] << 2) + s1_adder[2];
+    s1_mul6 = $signed({s1_adder[1][32:0], 1'b0}) + $signed({s1_adder[1][32:0], 2'b00});
+    s1_mul13 = $signed({s1_adder[2][32:0], 3'b000}) + $signed({s1_adder[2][32:0], 2'b00}) + $signed(s1_adder[2]);
     s1_reg0_w = s1_adder[0];
     s1_reg1_w = s1_mul6;
     s1_reg2_w = s1_mul13;
@@ -76,14 +76,17 @@ module Divider #(parameter WIDTH = 38)(
                  input signed [WIDTH-1:0] in,
                  output signed [WIDTH-4:0] out);
            
-wire signed [WIDTH-1+1:0] tmp_in;
-wire signed [WIDTH-1+2:0] add_s0;
-wire signed [WIDTH-1+3:0] add_s1;
-wire signed [WIDTH-1+4:0] add_s2;
+wire signed [WIDTH-1+1+2*WIDTH:0] tmp_in;
+wire signed [WIDTH-1+2+2*WIDTH:0] add_s0;
+wire signed [WIDTH-1+3+2*WIDTH:0] add_s1;
+wire signed [WIDTH-1+4+2*WIDTH:0] add_s2;
+wire signed [WIDTH-1+5+2*WIDTH:0] add_s3;
 
-assign tmp_in = {in[WIDTH-1:0],1'b0};
-assign add_s0 = (in + tmp_in) >>> 6;
+
+assign tmp_in = {in[WIDTH-1:0],1'b0, {2*WIDTH{1'b0}}}; // padding 0s
+assign add_s0 = ($signed({in[WIDTH-1:0],{2*WIDTH{1'b0}}}) + tmp_in) >>> 6;
 assign add_s1 = add_s0 + (add_s0 >>> 4);
 assign add_s2 = add_s1 + (add_s1 >>> 8);
-assign out = add_s2;
+assign add_s3 = add_s2 + (add_s2 >>> 16);
+assign out = add_s3[WIDTH-1+5+2*WIDTH: 2*WIDTH];
 endmodule

@@ -10,7 +10,7 @@ output  out_valid;
 input   [15:0]  b_in;
 output  [31:0]  x_out;
 //----------------- parameter definition -----------------//
-parameter NR_ITERATION = 100;
+parameter NR_ITERATION = 80;
 parameter N = 16;
 defparam bshreg.BIT_WIDTH = 16;
 defparam xshreg.BIT_WIDTH = 32;
@@ -22,7 +22,7 @@ localparam S_IDLE = 3'd0, S_IN = 3'd1, S_CALC = 3'd2, S_WAIT = 3'd3, S_OUT = 3'd
 // reg [15:0] b_r, b_w [0:N-1];    /* FIFO for b */
 reg [2:0] state_r, state_w;
 reg [4:0] row_cnt_r, row_cnt_w;
-reg [20:0] col_cnt_r, col_cnt_w;
+reg [19:0] col_cnt_r, col_cnt_w;
 reg out_valid_w, out_valid_r;
 
 //----------------- defining b_shreg's wire -----------------//
@@ -41,7 +41,6 @@ wire [31:0] pe_in1, pe_in2, pe_in3, pe_in4, pe_in5, pe_in6;
 wire [31:0] pe_out;
 wire [15:0] pe_b_in;
 reg         pe_i_en_w, pe_i_en_r;
-
 
 `ifdef DEBUG
 wire [15:0] out_tmp, pe_in1_tmp, pe_in2_tmp, pe_in3_tmp, pe_in4_tmp, pe_in5_tmp, pe_in6_tmp;
@@ -139,7 +138,7 @@ always @(*) begin
             end
         end
         S_IN: begin
-            if(row_cnt_r == N) begin // if we have read all the b values
+            if(row_cnt_r[4]) begin // if we have read all the b values
                 state_w = S_CALC;
                 b_shreg_in_w = b_in;
                 b_shreg_ctrl_w = 2'b00;
@@ -158,7 +157,7 @@ always @(*) begin
         end
         S_CALC: begin
             pe_i_en_w = 1'b1;
-            b_shreg_ctrl_w = (row_cnt_r[1:0] == 2'b11) ? 2'b11 : 2'b10;
+            b_shreg_ctrl_w = ((row_cnt_r[0] && row_cnt_r[1])) ? 2'b11 : 2'b10;
             x_shreg_in_w = pe_out;
             if (row_cnt_r == N) begin
                 state_w = S_WAIT;
@@ -174,10 +173,10 @@ always @(*) begin
             end
         end
         S_WAIT: begin
-            if(col_cnt_r == NR_ITERATION-1 && row_cnt_r == 3) begin
+            if(col_cnt_r == NR_ITERATION-1 && (row_cnt_r[0] && row_cnt_r[1])) begin
                 b_shreg_ctrl_w = 2'b01;
                 state_w = S_OUT;
-                row_cnt_w = 0;
+                row_cnt_w = 1;
                 col_cnt_w = 0;
                 out_valid_w = 1'b1;
             end
@@ -185,7 +184,7 @@ always @(*) begin
                 b_shreg_ctrl_w = 2'b10;
                 x_shreg_in_w = pe_out;
                 out_valid_w = 1'b0;
-                if (row_cnt_r == 3) begin
+                if (row_cnt_r[0] && row_cnt_r[1]) begin
                     state_w = S_CALC;
                     row_cnt_w = 1;
                     col_cnt_w = col_cnt_r + 1;
@@ -202,7 +201,7 @@ always @(*) begin
             end
         end
         S_OUT: begin
-            if (row_cnt_w == N-1) begin
+            if(row_cnt_r[4]) begin 
                 state_w = S_IDLE;
                 row_cnt_w = 0;
                 col_cnt_w = 0;
