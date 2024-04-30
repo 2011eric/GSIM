@@ -82,11 +82,26 @@ wire signed [WIDTH-1-3+FRAC:0] add_s1;
 wire signed [WIDTH-1-2+FRAC:0] add_s2;
 wire signed [WIDTH-1-1+FRAC:0] add_s3;
 
+reg  signed [WIDTH-1-2+FRAC:0] s3_reg_r, s3_reg_w;
 
+/* Stage 1 */
 assign tmp_in = {in[WIDTH-1:0],1'b0, {(FRAC){1'b0}}}; // padding 0s
 assign add_s0 = ($signed({in[WIDTH-1:0],{(FRAC){1'b0}}}) + tmp_in) >>> 6;
 assign add_s1 = add_s0 + (add_s0 >>> 4);
-assign add_s2 = add_s1 + (add_s1 >>> 8);
+/* Stage 2 */
+assign add_s2 = s3_reg_r + (s3_reg_r >>> 8);
 assign add_s3 = add_s2 + (add_s2 >>> 16);
 assign out = add_s3[WIDTH-1-1+FRAC: FRAC];
+
+always @(*) begin
+    s3_reg_w = add_s1;
+end
+
+always @(posedge clk or posedge reset) begin
+    if (reset) begin
+        s3_reg_r <= 0;
+    end else begin
+        s3_reg_r <= s3_reg_w;
+    end
+end
 endmodule

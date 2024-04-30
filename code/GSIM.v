@@ -127,28 +127,28 @@ shreg xshreg ( // TODO: connecting the wires
     .OUT2_4(x_shreg_out2_4),
     .OUT2_5(x_shreg_out2_5),
     .OUT2_6(x_shreg_out2_6),
-    .IN(x_shreg_in_r), 
-    .IN2(x_shreg_in2_r),
+    .IN(x_shreg_in_w), 
+    .IN2(x_shreg_in2_w),
     .ctrl(b_shreg_ctrl_r), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5, same as b_shreg
     .i_en(x_shreg_i_en_r)
 );
 
 //----------------- connecting the wires -----------------//
-assign pe_in1 = ((state_r == S_CALC) && row_cnt_r != 1 && row_cnt_r != 5 && pe_i_en_r) ? x_shreg_out_1 : 0; // 13
-assign pe_in2 = ((state_r == S_CALC) && row_cnt_r != 8 && pe_i_en_r) ? x_shreg_out_2 : 0; // 3
-assign pe_in3 = ((state_r == S_CALC) && row_cnt_r != 1 && row_cnt_r != 5 && pe_i_en_r) ? x_shreg_out_3 : 0; // 14
-assign pe_in4 = ((state_r == S_CALC) && pe_i_en_r) ? x_shreg_out_4 : 0; // 2
-assign pe_in5 = ((state_r == S_CALC) && row_cnt_r != 1 && pe_i_en_r) ? x_shreg_out_5 : 0; // 15
-assign pe_in6 = ((state_r == S_CALC) && pe_i_en_r) ? x_shreg_out_6 : 0; // 1
-assign pe_b_in = (state_r == S_CALC && pe_i_en_r) ? b_shreg_out_0 : 0;
+assign pe_in1 = (row_cnt_r != 1 && row_cnt_r != 5) ? x_shreg_out_1 : 0; // 13
+assign pe_in2 = (row_cnt_r != 8) ? x_shreg_out_2 : 0; // 3
+assign pe_in3 = (row_cnt_r != 1 && row_cnt_r != 5) ? x_shreg_out_3 : 0; // 14
+assign pe_in4 = x_shreg_out_4; // 2
+assign pe_in5 = (row_cnt_r != 1) ? x_shreg_out_5 : 0; // 15
+assign pe_in6 = x_shreg_out_6; // 1
+assign pe_b_in = b_shreg_out_0;
 
-assign pe2_in1 = ((state_r == S_CALC) && row_cnt_r != 1 && pe_i_en_r) ? x_shreg_out2_1 : 0; 
-assign pe2_in2 = ((state_r == S_CALC) && row_cnt_r != 8 && row_cnt_r != 4 && pe_i_en_r) ? x_shreg_out2_2 : 0; 
-assign pe2_in3 = ((state_r == S_CALC) && pe_i_en_r) ? x_shreg_out2_3 : 0; 
-assign pe2_in4 = ((state_r == S_CALC) && row_cnt_r != 8 && row_cnt_r != 4 && pe_i_en_r) ? x_shreg_out2_4 : 0; 
-assign pe2_in5 = ((state_r == S_CALC) && pe_i_en_r) ? x_shreg_out2_5 : 0; 
-assign pe2_in6 = ((state_r == S_CALC) && row_cnt_r != 8 && pe_i_en_r) ? x_shreg_out2_6 : 0; 
-assign pe2_b_in = (state_r == S_CALC && pe_i_en_r) ? b_shreg_out2_0 : 0;
+assign pe2_in1 = (row_cnt_r != 1) ? x_shreg_out2_1 : 0; 
+assign pe2_in2 = (row_cnt_r != 8 && row_cnt_r != 4) ? x_shreg_out2_2 : 0; 
+assign pe2_in3 = x_shreg_out2_3; 
+assign pe2_in4 = (row_cnt_r != 8 && row_cnt_r != 4) ? x_shreg_out2_4 : 0; 
+assign pe2_in5 = x_shreg_out2_5 ; 
+assign pe2_in6 = (row_cnt_r != 8) ? x_shreg_out2_6 : 0; 
+assign pe2_b_in = b_shreg_out2_0;
 
 assign x_out = x_shreg_out_0;
 assign out_valid = out_valid_r;
