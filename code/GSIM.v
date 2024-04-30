@@ -92,7 +92,7 @@ shreg xshreg ( // TODO: connecting the wires
     .OUT4(x_shreg_out_4), 
     .OUT5(x_shreg_out_5), 
     .OUT6(x_shreg_out_6), 
-    .IN(x_shreg_in_r), 
+    .IN(x_shreg_in_w), 
     .ctrl(b_shreg_ctrl_r), // ctrl = 01 --> shift by 1, ctrl = 10 --> shift by 4, ctrl = 11 --> shift by 5, same as b_shreg
     .i_en(x_shreg_i_en_r)
 );
@@ -105,6 +105,7 @@ assign pe_in4 = ((state_r == S_CALC) && row_cnt_r != 16 && row_cnt_r != 12 && pe
 assign pe_in5 = ((state_r == S_CALC) && row_cnt_r != 1 && pe_i_en_r) ? x_shreg_out_5 : 0; // 15
 assign pe_in6 = ((state_r == S_CALC) && row_cnt_r != 16 && pe_i_en_r) ? x_shreg_out_6 : 0; // 1
 assign pe_b_in = (state_r == S_CALC && pe_i_en_r) ? b_shreg_out_0 : 0;
+
 assign x_out = x_shreg_out_0;
 assign out_valid = out_valid_r;
 //----------------- combinational part -----------------//
