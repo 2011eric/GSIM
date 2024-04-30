@@ -98,13 +98,13 @@ shreg xshreg ( // TODO: connecting the wires
 );
 
 //----------------- connecting the wires -----------------//
-assign pe_in1 = ((state_r == S_CALC) && row_cnt_r != 1 && row_cnt_r != 5 && row_cnt_r != 9 && pe_i_en_r) ? x_shreg_out_1 : 0; // 13
-assign pe_in2 = ((state_r == S_CALC) && row_cnt_r != 16 && row_cnt_r != 12 && row_cnt_r != 8 && pe_i_en_r) ? x_shreg_out_2 : 0; // 3
-assign pe_in3 = ((state_r == S_CALC) && row_cnt_r != 1 && row_cnt_r != 5 && pe_i_en_r) ? x_shreg_out_3 : 0; // 14
-assign pe_in4 = ((state_r == S_CALC) && row_cnt_r != 16 && row_cnt_r != 12 && pe_i_en_r) ? x_shreg_out_4 : 0; // 2
-assign pe_in5 = ((state_r == S_CALC) && row_cnt_r != 1 && pe_i_en_r) ? x_shreg_out_5 : 0; // 15
-assign pe_in6 = ((state_r == S_CALC) && row_cnt_r != 16 && pe_i_en_r) ? x_shreg_out_6 : 0; // 1
-assign pe_b_in = (state_r == S_CALC && pe_i_en_r) ? b_shreg_out_0 : 0;
+assign pe_in1 = (row_cnt_r != 1 && row_cnt_r != 5 && row_cnt_r != 9) ? x_shreg_out_1 : 0; // 13
+assign pe_in2 = (row_cnt_r != 16 && row_cnt_r != 12 && row_cnt_r != 8) ? x_shreg_out_2 : 0; // 3
+assign pe_in3 = (row_cnt_r != 1 && row_cnt_r != 5) ? x_shreg_out_3 : 0; // 14
+assign pe_in4 = (row_cnt_r != 16 && row_cnt_r != 12) ? x_shreg_out_4 : 0; // 2
+assign pe_in5 = (row_cnt_r != 1) ? x_shreg_out_5 : 0; // 15
+assign pe_in6 = (row_cnt_r != 16) ? x_shreg_out_6 : 0; // 1
+assign pe_b_in = b_shreg_out_0;
 
 assign x_out = x_shreg_out_0;
 assign out_valid = out_valid_r;
