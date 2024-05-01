@@ -21,7 +21,7 @@ reg signed [36:0] s1_reg2_r, s1_reg2_w;
 reg signed [37:0] s2_adder;
 reg signed [37:0] s2_reg0_r, s2_reg0_w;
 
-wire signed [34:0] div_out;
+wire signed [33:0] div_out;
 always @(posedge clk or posedge reset) begin
     if (reset) begin
         s1_reg0_r <= 0;
@@ -55,13 +55,13 @@ always @(*) begin:stage2
     s2_reg0_w = s2_adder;
 end
 
-assign out = div_out;
+assign out = div_out[31:0];
 
 
-Divider #(38, 8) div (
+Divider #(37, 8) div (
     .clk(clk),
     .reset(reset),
-    .in(s2_reg0_r),
+    .in(s2_reg0_r[36:0]),
     .out(div_out)
 );
 endmodule
